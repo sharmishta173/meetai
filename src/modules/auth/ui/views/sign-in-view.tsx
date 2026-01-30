@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { OctagonAlertIcon } from "lucide-react";
+import { FaGithub, FaGoogle} from "react-icons/fa";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 
@@ -135,16 +136,38 @@ export const SignInView = () => {
                 {/* OAuth */}
                 <div className="grid grid-cols-2 gap-4">
                   <Button 
-                  disabled={pending}
-                  variant="outline" type="button">
-                    Google
+                 disabled={pending}
+                                 onClick={async () => {
+                                   setPending(true);
+                                   await authClient.signIn.social({
+                                     provider:"google",
+                                     callbackURL: "/",
+                                   })
+                 
+                                 }}
+                                 variant="outline"
+                                  type="button"
+                                  className="w-full"
+                  >
+                    <FaGoogle />
                   </Button>
-                  <Button 
-                  disabled={pending}
-                  variant="outline" type="button">
-                    GitHub
+                  <Button
+                   disabled={pending}
+                                   onClick={async () => {
+                                     setPending(true);
+                                     await authClient.signIn.social({
+                                       provider:"github",
+                                       callbackURL: "/",
+                                     })
+                   
+                                   }}
+                                   variant="outline"
+                                    type="button"
+                                    className="w-full"
+                   >
+                                    <FaGithub />
                   </Button>
-                </div>
+                  </div>
 
                 {/* Sign up */}
                 <div className="text-center text-sm">
