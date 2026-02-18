@@ -34,7 +34,7 @@ export const ResponsiveDialog = ({
 }: ResponsiveDialogProps) => {
     const isMobile = useIsMobile();
 
-    if(isMobile) {
+    if (isMobile) {
        return (
         <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent>
@@ -51,6 +51,7 @@ export const ResponsiveDialog = ({
         </Drawer>
        ); 
     }
+
     return (
        <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
@@ -62,4 +63,4 @@ export const ResponsiveDialog = ({
         </DialogContent>
        </Dialog>
     );
-};    
+};
