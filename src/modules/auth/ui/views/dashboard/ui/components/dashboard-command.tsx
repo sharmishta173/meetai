@@ -10,7 +10,6 @@ interface Props {
     open: boolean;
     setOpen: Dispatch<SetStateAction<boolean>>;
 };
-export { CommandDialog, CommandInput } from "@/components/ui/command";
 
 export const DashboardCommand = ({open, setOpen }: Props) => {
     return (
