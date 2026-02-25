@@ -20,7 +20,7 @@ import {
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 
 
