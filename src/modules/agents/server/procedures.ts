@@ -9,7 +9,7 @@ import { TRPCError } from "@trpc/server";
 
 
 export const agentsRouter =  createTRPCRouter({
-      getOne: protectedProcedure
+    getOne: protectedProcedure
       .input(z.object({ id: z.string() }))
       .query(async ({ input, ctx }) => {
         const [existingAgent] = await db
@@ -17,22 +17,22 @@ export const agentsRouter =  createTRPCRouter({
             meetingCount: sql<number>`6`,
             ...getTableColumns(agents),
           })
-           .from(agents)
-           .where(
+          .from(agents)
+          .where(
             and(
               eq(agents.id, input.id),
               eq(agents.userId, ctx.auth.user.id),
             )
           );
 
-          if(!existingAgent) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Agent not found"})
-          }
+        if (!existingAgent) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Agent not found" })
+        }
 
         return existingAgent;
-    }),
-      
-        // Optional-input getMany for compatibility with dehydrated queries
+      }),
+
+    // Optional-input getMany for compatibility with dehydrated queries
     getMany: baseProcedure
       .input(
         z
@@ -73,18 +73,62 @@ export const agentsRouter =  createTRPCRouter({
           total,
           totalPages,
         };
-    }),
+      }),
     create: protectedProcedure
       .input(agentsInsertSchema)
       .mutation(async ({ input, ctx }) => {
-       const [createdAgent] = await db
-       .insert(agents)
-       .values({
-         ...input,
-        userId: ctx.auth.user.id,
-       })
-        .returning();
+        const [createdAgent] = await db
+          .insert(agents)
+          .values({
+            ...input,
+            userId: ctx.auth.user.id,
+          })
+          .returning();
 
-       return createdAgent;
-    }),
+        return createdAgent;
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.string(),
+        name: z.string().optional(),
+        instructions: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...values } = input;
+        const [updatedAgent] = await db
+          .update(agents)
+          .set(values)
+          .where(
+            and(
+              eq(agents.id, id),
+              eq(agents.userId, ctx.auth.user.id),
+            )
+          )
+          .returning();
+
+        if (!updatedAgent) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Agent not found" });
+        }
+
+        return updatedAgent;
+      }),
+    remove: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const [deletedAgent] = await db
+          .delete(agents)
+          .where(
+            and(
+              eq(agents.id, input.id),
+              eq(agents.userId, ctx.auth.user.id),
+            )
+          )
+          .returning();
+
+        if (!deletedAgent) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Agent not found" });
+        }
+
+        return deletedAgent;
+      }),
 })
