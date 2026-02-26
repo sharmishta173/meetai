@@ -59,11 +59,17 @@ export const AgentIdViewHeader = ({
                    </Button>
                    </DropdownMenuTrigger>
                    <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={onEdit}>
+                    <DropdownMenuItem onSelect={(e) => {
+                        e.preventDefault();
+                        onEdit();
+                    }}>
                       <PencilIcon className="size-4 text-black" />
                       Edit
                     </DropdownMenuItem>
-                      <DropdownMenuItem onClick={onRemove}>
+                      <DropdownMenuItem onSelect={(e) => {
+                        e.preventDefault();
+                        onRemove();
+                      }}>
                       <TrashIcon className="size-4 text-black" />
                       Delete
                     </DropdownMenuItem>
