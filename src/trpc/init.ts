@@ -19,7 +19,7 @@ export const createTRPCContext = cache(async () => {
 // since it's not very descriptive.
 // For instance, the use of a t variable
 // is common in i18n libraries.
-const t = initTRPC.create({
+const t = initTRPC.context<Awaited<ReturnType<typeof createTRPCContext>>>().create({
   /**
    * @see https://trpc.io/docs/server/data-transformers
    */
@@ -31,6 +31,10 @@ export const createCallerFactory = t.createCallerFactory;
 export const baseProcedure = t.procedure;
 
 export const protectedProcedure = baseProcedure.use(async ({ ctx, next}) => {
+  if (ctx.auth) {
+    return next({ ctx: { ...ctx, auth: ctx.auth } });
+  }
+
   const session =  await auth.api.getSession({
     headers: await headers(),
   });

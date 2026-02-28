@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { db } from "@/db";
-import { meetings } from "@/db/schema";
-import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init";
-import { and, count, desc, eq, getTableColumns, ilike } from "drizzle-orm";
+import { agents, meetings } from "@/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import { and, count, desc, eq, getTableColumns, ilike, sql } from "drizzle-orm";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from "@/constants";
 import { TRPCError } from "@trpc/server";
-import { meetingsInsertSchema } from "../schemas";
-
+import { meetingsInsertSchema, meetingsUpdateSchema } from "../schemas";
+  
 
 export const meetingsRouter =  createTRPCRouter({
     getOne: protectedProcedure
@@ -31,8 +31,8 @@ export const meetingsRouter =  createTRPCRouter({
         return existingMeeting;
       }),
 
-    // Optional-input getMany for compatibility with dehydrated queries
-    getMany: baseProcedure
+    // Optional-input ge  tMany for compatibility with dehydrated queries
+    getMany: protectedProcedure
       .input(
         z
           .object({
@@ -42,7 +42,7 @@ export const meetingsRouter =  createTRPCRouter({
           })
           .optional()
       )
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const search = input?.search ?? "";
         const page = input?.page ?? DEFAULT_PAGE;
         const pageSizeRaw = input?.pageSize ?? DEFAULT_PAGE_SIZE;
@@ -51,9 +51,18 @@ export const meetingsRouter =  createTRPCRouter({
         const items = await db
           .select({
             ...getTableColumns(meetings),
+            agent: agents,
+            duration: sql<number>`EXTRACT(EPOCH FROM (NULLIF(ended_at, '')::timestamp - NULLIF(started_at, '')::timestamp))`.as("duration"),
+
           })
           .from(meetings)
-          .where(search ? ilike(meetings.name, `%${search}%`) : undefined)
+          .innerJoin(agents, eq(meetings.agentId, agents.id))
+          .where(
+            and(
+              eq(meetings.userId, ctx.auth.user.id),
+              search ? ilike(meetings.name, `%${search}%`) : undefined
+            )
+          )
           .orderBy(desc(meetings.createdAt), desc(meetings.id))
           .limit(pageSize)
           .offset((page - 1) * pageSize);
@@ -61,7 +70,13 @@ export const meetingsRouter =  createTRPCRouter({
         const [totalRow] = await db
           .select({ count: count() })
           .from(meetings)
-          .where(search ? ilike(meetings.name, `%${search}%`) : undefined);
+          .innerJoin(agents, eq(meetings.agentId, agents.id))
+          .where(
+            and(
+              eq(meetings.userId, ctx.auth.user.id),
+              search ? ilike(meetings.name, `%${search}%`) : undefined
+            )
+          );
 
         const total = totalRow?.count ?? 0;
         const totalPages = Math.ceil(total / pageSize) || 1;
@@ -72,6 +87,29 @@ export const meetingsRouter =  createTRPCRouter({
           totalPages,
         };
       }),
+       update: protectedProcedure
+          .input(meetingsUpdateSchema)
+          .mutation(async ({ input, ctx }) => {
+            const { id, ...values } = input;
+            const [updatedMeeting] = await db
+              .update(meetings)
+              .set(values)
+              .where(
+                and(
+                  eq(meetings.id, id),
+                  eq(meetings.userId, ctx.auth.user.id),
+                )
+              )
+              .returning();
+    
+            if (!updatedMeeting) {
+              throw new TRPCError({ 
+                code: "NOT_FOUND", 
+                message: "Meeting not found" });
+            }
+    
+            return updatedMeeting;
+          }),
 
     create: protectedProcedure
       .input(meetingsInsertSchema)
@@ -83,7 +121,7 @@ export const meetingsRouter =  createTRPCRouter({
             userId: ctx.auth.user.id,
           })
           .returning();
-
+        //TODO: Create Stream Call, Upser Stream Users
         return createdMeeting;
       }),
 });
