@@ -1,17 +1,8 @@
-import { meetingsRouter } from './server/procedures';
-import { createTRPCRouter } from '@/trpc/init';
-export const appRouter = createTRPCRouter({
-    meetings: meetingsRouter,
-});
-//export type definition of API
+import { inferRouterOutputs } from "@trpc/server";
+import { appRouter } from "@/trpc/routers/_app";
+
 export type AppRouter = typeof appRouter;
 
-export type MeetingGetOne = {
-  id: string;
-  name: string;
-  userId: string;
-  instructions: string;
-  createdAt: string;
-  updatedAt: string;
-  meetingCount: number;
-};
+export type MeetingGetMany = inferRouterOutputs<AppRouter>["meetings"]["getMany"]["items"];
+export type MeetingGetOne = inferRouterOutputs<AppRouter>["meetings"]["getOne"];
+
