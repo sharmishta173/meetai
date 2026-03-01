@@ -39,6 +39,11 @@ export const meetingsRouter =  createTRPCRouter({
             page: z.number().optional(),
             pageSize: z.number().optional(),
             search: z.string().optional().nullable(),
+            agentId: z.string().optional().nullable(),
+            status: z
+              .enum(["upcoming", "active", "completed", "processing", "cancelled"])
+              .optional()
+              .nullable(),
           })
           .optional()
       )
@@ -47,20 +52,23 @@ export const meetingsRouter =  createTRPCRouter({
         const page = input?.page ?? DEFAULT_PAGE;
         const pageSizeRaw = input?.pageSize ?? DEFAULT_PAGE_SIZE;
         const pageSize = Math.max(MIN_PAGE_SIZE, Math.min(MAX_PAGE_SIZE, pageSizeRaw));
+        const status = input?.status ?? undefined;
+        const agentId = input?.agentId ?? undefined;
 
         const items = await db
           .select({
             ...getTableColumns(meetings),
             agent: agents,
             duration: sql<number>`EXTRACT(EPOCH FROM (NULLIF(ended_at, '')::timestamp - NULLIF(started_at, '')::timestamp))`.as("duration"),
-
           })
           .from(meetings)
           .innerJoin(agents, eq(meetings.agentId, agents.id))
           .where(
             and(
               eq(meetings.userId, ctx.auth.user.id),
-              search ? ilike(meetings.name, `%${search}%`) : undefined
+              search ? ilike(meetings.name, `%${search}%`) : undefined,
+              status ? eq(meetings.status, status) : undefined,
+              agentId ? eq(meetings.agentId, agentId) : undefined,
             )
           )
           .orderBy(desc(meetings.createdAt), desc(meetings.id))
@@ -74,7 +82,9 @@ export const meetingsRouter =  createTRPCRouter({
           .where(
             and(
               eq(meetings.userId, ctx.auth.user.id),
-              search ? ilike(meetings.name, `%${search}%`) : undefined
+              search ? ilike(meetings.name, `%${search}%`) : undefined,
+              status ? eq(meetings.status, status) : undefined,
+              agentId ? eq(meetings.agentId, agentId) : undefined,
             )
           );
 

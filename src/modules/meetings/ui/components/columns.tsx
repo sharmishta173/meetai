@@ -5,7 +5,6 @@ import humanizeDuration from "humanize-duration";
 import { ColumnDef } from "@tanstack/react-table"
 import { MeetingGetMany } from "../../type"
 import { GeneratedAvatar } from "@/components/generated-avatar"
-import { VideoIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   CircleCheckIcon,
