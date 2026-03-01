@@ -53,7 +53,7 @@ export const MeetingForm  = ({
      resolver: zodResolver(meetingsInsertSchema),
      defaultValues: {
        name: initialValues?.name ?? "",
-       agentId: initialValues?.instructions ?? "",
+       agentId: initialValues?.agentId ?? "",
      },
    });
 
