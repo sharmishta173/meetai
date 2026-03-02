@@ -25,9 +25,13 @@ const Page = async ({ params }: Props) => {
         redirect("/sign-in");
     }
     const queryClient = getQueryClient();
-    void queryClient.prefetchQuery(
-      trpc.meetings.getOne.queryOptions({ id: meetingId }),
-    );
+    try {
+      await queryClient.prefetchQuery(
+        trpc.meetings.getOne.queryOptions({ id: meetingId }),
+      );
+    } catch {
+      return <MeetingIdViewError />;
+    }
     //TODO: Prefetch `meetings.getTranscript`
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
