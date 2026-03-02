@@ -1,0 +1,81 @@
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { ChevronRightIcon, TrashIcon, PencilIcon,  MoreVerticalIcon } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import{
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuItem,
+    DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
+
+interface Props {
+    meetingId: string;
+    meetingName: string;
+    onEdit: () => void;
+    onRemove: () => void;
+}
+
+export const MeetingIdViewHeader = ({
+    meetingId,
+    meetingName,
+    onEdit,
+    onRemove,
+}: Props) => {
+    return (
+        <div className="flex items-center justify-between py-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                 <BreadcrumbItem>
+                   <BreadcrumbLink asChild className="font-medium text-xl text-foreground">
+                   <Link href="/meetings">
+                     My Meetings
+                   </Link>
+                   </BreadcrumbLink>
+                 </BreadcrumbItem>
+                 <BreadcrumbSeparator className="text-forground text-xl font-medium [&>svg]:size-4">
+                   <ChevronRightIcon />
+                 </BreadcrumbSeparator>
+                 <BreadcrumbItem>
+                   <BreadcrumbLink asChild className="font-medium text-xl text-foreground">
+                   <Link href={`/meetings/${meetingId}`}>
+                     {meetingName}
+                   </Link>
+                   </BreadcrumbLink>
+                 </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            {/* Without modal={false}, the dialog that this dropdown opens cause the website to get unclickable */}
+            <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost">
+                        <MoreVerticalIcon />
+                   </Button>
+                   </DropdownMenuTrigger>
+                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={(e) => {
+                        e.preventDefault();
+                        onEdit();
+                    }}>
+                      <PencilIcon className="size-4 text-black" />
+                      Edit
+                    </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={(e) => {
+                        e.preventDefault();
+                        onRemove();
+                      }}>
+                      <TrashIcon className="size-4 text-black" />
+                      Delete
+                    </DropdownMenuItem>
+                    </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    )
+}
+export default MeetingIdViewHeader;
