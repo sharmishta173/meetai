@@ -8,6 +8,11 @@ import { useRouter } from "next/navigation";
 import { useConfirm } from "@/hooks/use-confirm";
 import { UpdateMeetingDialog } from "../components/update-meeting-dialog";
 import { useState } from "react";
+import { UpcomingState } from "../components/upcoming-state";
+import { ActiveState } from "../components/active-state";
+import { MeetingGetOne } from "../../type";
+import { CancelledState } from "../components/cancelled-state";
+import { ProcessingState } from "../components/processing-state";
 
 
 interface Props {
@@ -40,7 +45,15 @@ export const MeetingIdView = ({ meetingId} : Props) => {
         const ok = await confirmRemove();
         if(!ok) return;
         await removeMeeting.mutateAsync({ id: meetingId });
-    }
+    };
+
+    const meeting = data as MeetingGetOne;
+    const status = (meeting.status ?? "").toLowerCase();
+    const isActive = status === "active" || (!!meeting.startedAt && !meeting.endedAt);
+    const isUpcoming = status === "upcoming";
+    const isCancelled = status === "cancelled";
+    const isCompleted = status === "completed";
+    const isProcessing = status === "processing";
      return (
         <>
         <RemovedConfirmation />
@@ -56,7 +69,20 @@ export const MeetingIdView = ({ meetingId} : Props) => {
               onEdit={() =>  setUpdateMeetingDialogOpen(true)}
               onRemove={handleRemoveMeeting}
             />
-           {JSON.stringify(data, null, 2)}
+           {isCancelled && <CancelledState />}
+           {isProcessing && <ProcessingState />}
+           {isCompleted && <div>Completed</div>}
+           {isActive && <ActiveState meetingId={meetingId} />}
+           {isUpcoming && ( 
+            <UpcomingState 
+             meetingId={meetingId}
+             onCancelMeeting={() => {}}
+             isCancelling={false}
+           />
+           )}
+           {!isCancelled && !isProcessing && !isCompleted && !isActive && !isUpcoming && (
+             <ProcessingState />
+           )}
         </div>
         </>
      );
